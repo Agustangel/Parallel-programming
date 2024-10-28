@@ -31,8 +31,27 @@ public:
   matrix(const matrix &rhs)
       : buffer(rhs.buffer), rows(rhs.rows), cols(rhs.cols) {}
 
-  std::size_t getRows() const { return rows; }
-  std::size_t getCols() const { return cols; }
+private:
+  class proxy_row {
+    int *row_ptr = nullptr;
+    int *row_end_ptr = nullptr;
+
+  public:
+    proxy_row() = default;
+    proxy_row(int *begin_ptr, std::size_t cols)
+        : row_ptr{begin_ptr}, row_end_ptr{row_ptr + cols} {}
+
+    int &operator[](std::size_t idx) { return row_ptr[idx]; }
+    const int &operator[](std::size_t idx) const { return row_ptr[idx]; }
+  };
+
+public:
+  proxy_row operator[](unsigned idx) {
+    return proxy_row{&*buffer.begin() + ncols() * idx, ncols()};
+  }
+
+  std::size_t nrows() const { return rows; }
+  std::size_t ncols() const { return cols; }
 
   bool isSquare() const { return rows == cols; }
 };
