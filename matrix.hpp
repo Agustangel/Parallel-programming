@@ -101,6 +101,24 @@ public:
     return *this;
   }
 
+  matrix &transpose() & {
+    if (isSquare()) {
+      for (std::size_t i = 0; i < rows; ++i) {
+        for (std::size_t j = i + 1; j < rows; ++j)
+          std::swap((*this)[i][j], (*this)[j][i]);
+      }
+      return *this;
+    }
+
+    matrix transposed{cols, rows};
+    for (std::size_t i = 0; i < rows; ++i) {
+      for (std::size_t j = 0; j < cols; ++j)
+        transposed[j][i] = std::move((*this)[i][j]);
+    }
+    *this = std::move(transposed);
+    return *this;
+  }
+
   std::size_t nrows() const { return rows; }
   std::size_t ncols() const { return cols; }
 
