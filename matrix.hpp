@@ -101,6 +101,23 @@ public:
     return *this;
   }
 
+  // TODO: test this operator
+  matrix &operator*=(const matrix &rhs) {
+    if (cols != rhs.rows)
+      throw std::runtime_error("Unsuitable matrix sizes");
+
+    matrix tmp{rhs};
+    tmp.transpose();
+    for (std::size_t i = 0; i < rows; ++i) {
+      for (std::size_t j = 0; j < tmp.cols; ++j) {
+        for (std::size_t k = 0; k < cols; ++k)
+          tmp[i][j] += (*this)[i][k] * tmp[j][k];
+      }
+    }
+    *this = std::move(tmp);
+    return *this;
+  }
+
   matrix &transpose() & {
     if (isSquare()) {
       for (std::size_t i = 0; i < rows; ++i) {
@@ -128,4 +145,5 @@ public:
 // clang-format off
 matrix operator+(const matrix &lhs, const matrix &rhs) { auto res = lhs; res += rhs; return res; }
 matrix operator-(const matrix &lhs, const matrix &rhs) { auto res = lhs; res -= rhs; return res; }
+matrix operator*(const matrix &lhs, const matrix &rhs) { auto res = lhs; res *= rhs; return res; }
 // clang-format on
