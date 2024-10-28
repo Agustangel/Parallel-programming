@@ -45,9 +45,24 @@ private:
     const int &operator[](std::size_t idx) const { return row_ptr[idx]; }
   };
 
+  class const_proxy_row {
+    const int *row_ptr = nullptr;
+    const int *row_end_ptr = nullptr;
+
+  public:
+    const_proxy_row() = default;
+    const_proxy_row(const int *begin_ptr, std::size_t cols)
+        : row_ptr{begin_ptr}, row_end_ptr{row_ptr + cols} {}
+
+    const int &operator[](std::size_t idx) const { return row_ptr[idx]; }
+  };
+
 public:
   proxy_row operator[](unsigned idx) {
     return proxy_row{&*buffer.begin() + ncols() * idx, ncols()};
+  }
+  const_proxy_row operator[](unsigned idx) const {
+    return const_proxy_row{&*buffer.begin() + ncols() * idx, ncols()};
   }
 
   std::size_t nrows() const { return rows; }
