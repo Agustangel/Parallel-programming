@@ -12,7 +12,7 @@ class matrix {
 
 public:
   matrix(std::size_t rows, std::size_t cols)
-      : rows{rows}, cols{cols}, buffer(rows * cols, int{}) {}
+      : buffer(rows * cols, int{}), rows{rows}, cols{cols} {}
 
   template <typename Iter>
   matrix(std::size_t rows, std::size_t cols, Iter frst, Iter lst)
@@ -21,6 +21,15 @@ public:
     std::copy_if(frst, lst, buffer.begin(),
                  [&count](const auto &) { return count && count--; });
   }
+
+  matrix(matrix &&rhs) noexcept
+      : buffer(std::move(rhs.buffer)), rows(rhs.rows), cols(rhs.cols) {
+    rhs.rows = 0;
+    rhs.cols = 0;
+  }
+
+  matrix(const matrix &rhs)
+      : buffer(rhs.buffer), rows(rhs.rows), cols(rhs.cols) {}
 
   std::size_t getRows() const { return rows; }
   std::size_t getCols() const { return cols; }
