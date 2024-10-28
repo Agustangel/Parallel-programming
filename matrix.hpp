@@ -106,3 +106,8 @@ public:
 
   bool isSquare() const { return rows == cols; }
 };
+
+// clang-format off
+matrix operator+(const matrix &lhs, const matrix &rhs) { auto res = lhs; res += rhs; return res; }
+matrix operator-(const matrix &lhs, const matrix &rhs) { auto res = lhs; res -= rhs; return res; }
+// clang-format on
