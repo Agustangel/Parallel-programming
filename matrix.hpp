@@ -59,10 +59,10 @@ private:
 
 public:
   proxy_row operator[](unsigned idx) {
-    return proxy_row{&*buffer.begin() + ncols() * idx, ncols()};
+    return proxy_row{&*buffer.begin() + cols * idx, cols};
   }
   const_proxy_row operator[](unsigned idx) const {
-    return const_proxy_row{&*buffer.begin() + ncols() * idx, ncols()};
+    return const_proxy_row{&*buffer.begin() + cols * idx, cols};
   }
 
   matrix &operator=(const matrix &rhs) noexcept {
@@ -101,20 +101,20 @@ public:
     return *this;
   }
 
-  // TODO: test this operator
   matrix &operator*=(const matrix &rhs) {
     if (cols != rhs.rows)
       throw std::runtime_error("Unsuitable matrix sizes");
 
+    matrix res{rows, rhs.cols};
     matrix tmp{rhs};
     tmp.transpose();
     for (std::size_t i = 0; i < rows; ++i) {
-      for (std::size_t j = 0; j < tmp.cols; ++j) {
+      for (std::size_t j = 0; j < tmp.rows; ++j) {
         for (std::size_t k = 0; k < cols; ++k)
-          tmp[i][j] += (*this)[i][k] * tmp[j][k];
+          res[i][j] += (*this)[i][k] * tmp[j][k];
       }
     }
-    *this = std::move(tmp);
+    *this = std::move(res);
     return *this;
   }
 
