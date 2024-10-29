@@ -43,6 +43,9 @@ private:
 
     int &operator[](std::size_t idx) { return row_ptr[idx]; }
     const int &operator[](std::size_t idx) const { return row_ptr[idx]; }
+
+    auto begin() const { return row_ptr; }
+    auto end() const { return row_end_ptr; }
   };
 
   class const_proxy_row {
@@ -55,6 +58,9 @@ private:
         : row_ptr{begin_ptr}, row_end_ptr{row_ptr + cols} {}
 
     const int &operator[](std::size_t idx) const { return row_ptr[idx]; }
+
+    auto begin() const { return row_ptr; }
+    auto end() const { return row_end_ptr; }
   };
 
 public:
@@ -63,6 +69,13 @@ public:
   }
   const_proxy_row operator[](unsigned idx) const {
     return const_proxy_row{&*buffer.begin() + cols * idx, cols};
+  }
+
+  std::vector<proxy_row> getProxyRows() {
+    std::vector<proxy_row> rows(nrows());
+    for (std::size_t i = 0; i < nrows(); ++i)
+      rows[i] = (*this)[i];
+    return rows;
   }
 
   matrix &operator=(const matrix &rhs) noexcept {
@@ -139,7 +152,22 @@ public:
   std::size_t nrows() const { return rows; }
   std::size_t ncols() const { return cols; }
 
+  auto begin() const { return buffer.begin(); }
+  auto end() const { return buffer.end(); }
+
   bool isSquare() const { return rows == cols; }
+
+  void dump(std::ostream &os) const {
+    os << "n_rows = " << nrows() << std::endl;
+    os << "n_cols = " << ncols() << std::endl;
+    for (std::size_t i = 0; i < nrows(); ++i) {
+      os << "| ";
+      for (std::size_t j = 0; j < ncols(); ++j) {
+        os << (*this)[i][j] << " ";
+      }
+      os << "|" << std::endl;
+    }
+  }
 };
 
 // clang-format off
