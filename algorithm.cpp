@@ -14,8 +14,8 @@ static void fillSubmatrix(matrix &dest, const matrix &src,
 
 // Strassen's algorithm requires square matrices of the same size.
 // Strassen's algorithm requires the size of matrices of degree two.
-static matrix algorithmStrassen(const matrix &A, const matrix &B,
-                                std::size_t n) {
+static matrix algorithmStrassen(const matrix &A, const matrix &B) {
+  std::size_t n = A.nrows();
   // Use the usual multiplication for a small matrix size.
   if (n <= 64)
     return A * B;
@@ -33,6 +33,21 @@ static matrix algorithmStrassen(const matrix &A, const matrix &B,
   fillSubmatrix(B12, B, 0, n);
   fillSubmatrix(B21, B, n, 0);
   fillSubmatrix(B22, B, n, n);
+
+  // Recursive part of the algorithm.
+  matrix P1 = algorithmStrassen(A11 + A22, B11 + B22);
+  matrix P2 = algorithmStrassen(A21 + A22, B11);
+  matrix P3 = algorithmStrassen(A11, B12 - B22);
+  matrix P4 = algorithmStrassen(A22, B21 - B11);
+  matrix P5 = algorithmStrassen(A11 + A12, B22);
+  matrix P6 = algorithmStrassen(A21 - A11, B11 + B12);
+  matrix P7 = algorithmStrassen(A12 - A22, B21 + B22);
+
+  // Calculating the result submatrices.
+  matrix C11 = P1 + P4 - P5 + P7;
+  matrix C12 = P3 + P5;
+  matrix C21 = P2 + P4;
+  matrix C22 = P1 - P2 + P3 + P6;
   return A;
 }
 
