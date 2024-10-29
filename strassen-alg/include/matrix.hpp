@@ -75,8 +75,8 @@ class matrix {
 
   std::vector<proxy_row> getProxyRows() {
     std::vector<proxy_row> rows(nrows());
-    for (std::size_t i = 0; i < nrows(); ++i)
-      rows[i] = (*this)[i];
+    std::generate(rows.begin(), rows.end(),
+                  [this, i = 0]() mutable { return (*this)[i++]; });
     return rows;
   }
 
@@ -94,11 +94,9 @@ class matrix {
     if ((rows != rhs.rows) || (cols != rhs.cols))
       throw std::runtime_error("Unsuitable matrix sizes");
 
-    matrix tmp{rows, cols, buffer.begin(), buffer.end()};
-    for (std::size_t i = 0; i < rows; ++i) {
-      for (std::size_t j = 0; j < cols; ++j)
-        tmp[i][j] += rhs[i][j];
-    }
+    matrix tmp{rows, cols, begin(), end()};
+    std::transform(tmp.begin(), tmp.end(), rhs.begin(), tmp.begin(),
+                   std::plus<>());
     *this = std::move(tmp);
     return *this;
   }
@@ -107,11 +105,9 @@ class matrix {
     if ((rows != rhs.rows) || (cols != rhs.cols))
       throw std::runtime_error("Unsuitable matrix sizes");
 
-    matrix tmp{rows, cols, buffer.begin(), buffer.end()};
-    for (std::size_t i = 0; i < rows; ++i) {
-      for (std::size_t j = 0; j < cols; ++j)
-        tmp[i][j] -= rhs[i][j];
-    }
+    matrix tmp{rows, cols, begin(), end()};
+    std::transform(tmp.begin(), tmp.end(), rhs.begin(), tmp.begin(),
+                   std::minus<>());
     *this = std::move(tmp);
     return *this;
   }
@@ -154,10 +150,13 @@ class matrix {
   std::size_t nrows() const { return rows; }
   std::size_t ncols() const { return cols; }
 
-  auto begin() const { return buffer.begin(); }
-  auto end() const { return buffer.end(); }
+  std::vector<int>::iterator begin() { return buffer.begin(); }
+  std::vector<int>::iterator end() { return buffer.end(); }
 
-  bool isSquare() const { return rows == cols; }
+  std::vector<int>::const_iterator begin() const { return buffer.cbegin(); }
+  std::vector<int>::const_iterator end() const { return buffer.cend(); }
+
+  bool isSquare() const { return nrows() == ncols(); }
 
   void dump(std::ostream& os) const {
     os << "n_rows = " << nrows() << std::endl;

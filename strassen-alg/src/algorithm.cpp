@@ -2,6 +2,8 @@
 #include <iostream>
 #include "matrix.hpp"
 
+// TODO: add concepts (requires)
+
 static void fillSubmatrix(matrix& dest, const matrix& src,
                           std::size_t row_offset, std::size_t col_offset) {
   auto dest_rows = dest.getProxyRows();
