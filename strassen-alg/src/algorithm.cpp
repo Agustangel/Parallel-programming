@@ -1,11 +1,11 @@
-#include "matrix.hpp"
 #include <algorithm>
 #include <iostream>
+#include "matrix.hpp"
 
-static void fillSubmatrix(matrix &dest, const matrix &src,
+static void fillSubmatrix(matrix& dest, const matrix& src,
                           std::size_t row_offset, std::size_t col_offset) {
   auto dest_rows = dest.getProxyRows();
-  std::for_each(dest_rows.begin(), dest_rows.end(), [&](auto &dest_row) {
+  std::for_each(dest_rows.begin(), dest_rows.end(), [&](auto& dest_row) {
     auto src_row = src[row_offset++];
     std::copy(src_row.begin() + col_offset,
               src_row.begin() + col_offset + dest.ncols(), dest_row.begin());
@@ -14,9 +14,9 @@ static void fillSubmatrix(matrix &dest, const matrix &src,
 
 // I refused the idea of removing an explicit loop, because this will
 // increase the number of nested loops from 1 to 4.
-static void combineSubmatrix(matrix &dest, const matrix &src11,
-                             const matrix &src12, const matrix &src21,
-                             const matrix &src22) {
+static void combineSubmatrix(matrix& dest, const matrix& src11,
+                             const matrix& src12, const matrix& src21,
+                             const matrix& src22) {
   std::size_t offset = src11.nrows();
   for (std::size_t i = 0; i < offset; ++i) {
     for (std::size_t j = 0; j < offset; ++j) {
@@ -30,10 +30,10 @@ static void combineSubmatrix(matrix &dest, const matrix &src11,
 
 // Strassen's algorithm requires square matrices of the same size.
 // Strassen's algorithm requires the size of matrices of degree two.
-static matrix algorithmStrassen(const matrix &A, const matrix &B) {
+static matrix algorithmStrassen(const matrix& A, const matrix& B) {
   std::size_t size = A.nrows();
   // Use the usual multiplication for a small matrix size.
-  if (size <= 64)
+  if (size <= 2)
     return A * B;
 
   std::size_t n = size >> 1;
@@ -72,21 +72,9 @@ static matrix algorithmStrassen(const matrix &A, const matrix &B) {
 }
 
 int main() {
-  std::vector<int> data_A = {1, 2, 3, 4, 1, 2, 3, 4, 1, 2, 3, 4, 1, 2, 3, 4};
-  matrix A{4, 4, data_A.begin(), data_A.end()};
-  matrix B{2, 2};
-  matrix C{2, 2};
-  matrix D{2, 2};
-  matrix E{2, 2};
-  fillSubmatrix(B, A, 0, 0);
-  fillSubmatrix(C, A, 0, 2);
-  fillSubmatrix(D, A, 2, 0);
-  fillSubmatrix(E, A, 2, 2);
-  A.dump(std::cout);
-  B.dump(std::cout);
+  matrix A = matrix::square_unit(8);
+  matrix C = algorithmStrassen(A, A);
   C.dump(std::cout);
-  D.dump(std::cout);
-  E.dump(std::cout);
 
   return 0;
 }

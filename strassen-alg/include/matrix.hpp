@@ -10,60 +10,62 @@ class matrix {
   std::size_t rows = 0;
   std::size_t cols = 0;
 
-public:
-  matrix(std::size_t rows, std::size_t cols)
-      : buffer(rows * cols, int{}), rows{rows}, cols{cols} {}
+ public:
+  matrix(std::size_t rows, std::size_t cols, int val = {})
+      : buffer(rows * cols, val), rows{rows}, cols{cols} {}
 
   template <typename Iter>
   matrix(std::size_t rows, std::size_t cols, Iter frst, Iter lst)
       : matrix{rows, cols} {
     std::size_t count = rows * cols;
     std::copy_if(frst, lst, buffer.begin(),
-                 [&count](const auto &) { return count && count--; });
+                 [&count](const auto&) { return count && count--; });
   }
 
-  matrix(matrix &&rhs) noexcept
+  matrix(matrix&& rhs) noexcept
       : buffer(std::move(rhs.buffer)), rows(rhs.rows), cols(rhs.cols) {
     rhs.rows = 0;
     rhs.cols = 0;
   }
 
-  matrix(const matrix &rhs)
+  matrix(const matrix& rhs)
       : buffer(rhs.buffer), rows(rhs.rows), cols(rhs.cols) {}
 
-private:
-  class proxy_row {
-    int *row_ptr = nullptr;
-    int *row_end_ptr = nullptr;
+  static matrix square_unit(std::size_t size) { return matrix{size, size, 1}; }
 
-  public:
+ private:
+  class proxy_row {
+    int* row_ptr = nullptr;
+    int* row_end_ptr = nullptr;
+
+   public:
     proxy_row() = default;
-    proxy_row(int *begin_ptr, std::size_t cols)
+    proxy_row(int* begin_ptr, std::size_t cols)
         : row_ptr{begin_ptr}, row_end_ptr{row_ptr + cols} {}
 
-    int &operator[](std::size_t idx) { return row_ptr[idx]; }
-    const int &operator[](std::size_t idx) const { return row_ptr[idx]; }
+    int& operator[](std::size_t idx) { return row_ptr[idx]; }
+    const int& operator[](std::size_t idx) const { return row_ptr[idx]; }
 
     auto begin() const { return row_ptr; }
     auto end() const { return row_end_ptr; }
   };
 
   class const_proxy_row {
-    const int *row_ptr = nullptr;
-    const int *row_end_ptr = nullptr;
+    const int* row_ptr = nullptr;
+    const int* row_end_ptr = nullptr;
 
-  public:
+   public:
     const_proxy_row() = default;
-    const_proxy_row(const int *begin_ptr, std::size_t cols)
+    const_proxy_row(const int* begin_ptr, std::size_t cols)
         : row_ptr{begin_ptr}, row_end_ptr{row_ptr + cols} {}
 
-    const int &operator[](std::size_t idx) const { return row_ptr[idx]; }
+    const int& operator[](std::size_t idx) const { return row_ptr[idx]; }
 
     auto begin() const { return row_ptr; }
     auto end() const { return row_end_ptr; }
   };
 
-public:
+ public:
   proxy_row operator[](unsigned idx) {
     return proxy_row{&*buffer.begin() + cols * idx, cols};
   }
@@ -78,7 +80,7 @@ public:
     return rows;
   }
 
-  matrix &operator=(const matrix &rhs) noexcept {
+  matrix& operator=(const matrix& rhs) noexcept {
     if (this == &rhs)
       return *this;
     rows = rhs.rows;
@@ -88,7 +90,7 @@ public:
     return *this;
   }
 
-  matrix &operator+=(const matrix &rhs) {
+  matrix& operator+=(const matrix& rhs) {
     if ((rows != rhs.rows) || (cols != rhs.cols))
       throw std::runtime_error("Unsuitable matrix sizes");
 
@@ -101,7 +103,7 @@ public:
     return *this;
   }
 
-  matrix &operator-=(const matrix &rhs) {
+  matrix& operator-=(const matrix& rhs) {
     if ((rows != rhs.rows) || (cols != rhs.cols))
       throw std::runtime_error("Unsuitable matrix sizes");
 
@@ -114,7 +116,7 @@ public:
     return *this;
   }
 
-  matrix &operator*=(const matrix &rhs) {
+  matrix& operator*=(const matrix& rhs) {
     if (cols != rhs.rows)
       throw std::runtime_error("Unsuitable matrix sizes");
 
@@ -131,7 +133,7 @@ public:
     return *this;
   }
 
-  matrix &transpose() & {
+  matrix& transpose() & {
     if (isSquare()) {
       for (std::size_t i = 0; i < rows; ++i) {
         for (std::size_t j = i + 1; j < rows; ++j)
@@ -157,7 +159,7 @@ public:
 
   bool isSquare() const { return rows == cols; }
 
-  void dump(std::ostream &os) const {
+  void dump(std::ostream& os) const {
     os << "n_rows = " << nrows() << std::endl;
     os << "n_cols = " << ncols() << std::endl;
     for (std::size_t i = 0; i < nrows(); ++i) {
