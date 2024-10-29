@@ -12,17 +12,33 @@ static void fillSubmatrix(matrix &dest, const matrix &src,
   });
 }
 
+// I refused the idea of removing an explicit loop, because this will
+// increase the number of nested loops from 1 to 4.
+static void combineSubmatrix(matrix &dest, const matrix &src11,
+                             const matrix &src12, const matrix &src21,
+                             const matrix &src22) {
+  std::size_t offset = src11.nrows();
+  for (std::size_t i = 0; i < offset; ++i) {
+    for (std::size_t j = 0; j < offset; ++j) {
+      dest[i][j] = src11[i][j];
+      dest[i][j + offset] = src12[i][j];
+      dest[i + offset][j] = src21[i][j];
+      dest[i + offset][j + offset] = src22[i][j];
+    }
+  }
+}
+
 // Strassen's algorithm requires square matrices of the same size.
 // Strassen's algorithm requires the size of matrices of degree two.
 static matrix algorithmStrassen(const matrix &A, const matrix &B) {
-  std::size_t n = A.nrows();
+  std::size_t size = A.nrows();
   // Use the usual multiplication for a small matrix size.
-  if (n <= 64)
+  if (size <= 64)
     return A * B;
 
-  n = n >> 1;
-  matrix A11(n, n), A12(n, n), A21(n, n), A22(n, n);
-  matrix B11(n, n), B12(n, n), B21(n, n), B22(n, n);
+  std::size_t n = size >> 1;
+  matrix A11{n, n}, A12{n, n}, A21{n, n}, A22{n, n};
+  matrix B11{n, n}, B12{n, n}, B21{n, n}, B22{n, n};
 
   fillSubmatrix(A11, A, 0, 0);
   fillSubmatrix(A12, A, 0, n);
@@ -48,7 +64,11 @@ static matrix algorithmStrassen(const matrix &A, const matrix &B) {
   matrix C12 = P3 + P5;
   matrix C21 = P2 + P4;
   matrix C22 = P1 - P2 + P3 + P6;
-  return A;
+
+  matrix C{size, size};
+  combineSubmatrix(C, C11, C12, C21, C22);
+
+  return C;
 }
 
 int main() {
