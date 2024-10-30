@@ -1,7 +1,9 @@
+#include <chrono>
 #include <algorithm>
 #include <cassert>
 #include <iostream>
 #include <bit>
+#include <omp.h>
 #include "matrix.hpp"
 
 static void fillSubmatrix(matrix& dest, const matrix& src,
@@ -77,7 +79,15 @@ static matrix algorithmStrassen(const matrix& A, const matrix& B) {
 
 int main() {
   matrix A = matrix::square_unit(8);
+
+  auto start = std::chrono::high_resolution_clock::now();
   matrix C = algorithmStrassen(A, A);
+  auto finish = std::chrono::high_resolution_clock::now();
+
+  auto elapsed = std::chrono::duration<double, std::milli>(finish - start);
+  std::cout << "Calculation took " << elapsed.count() << "ms to run"
+            << std::endl;
+
   C.dump(std::cout);
 
   return 0;
