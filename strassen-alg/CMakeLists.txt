@@ -11,17 +11,16 @@ enable_testing()
 add_definitions(-DDEBUG)
 
 add_executable(
-  matrix
+  sequential
   src/algorithm.cpp
 )
-target_include_directories(matrix PUBLIC include)
+add_executable(
+  parallel
+  src/algorithm.cpp
+)
 
-option(USE_OPENMP "Enable OpenMP support" OFF)
-if(USE_OPENMP)
-    find_package(OpenMP REQUIRED)
-    if(OpenMP_CXX_FOUND)
-        target_link_libraries(<ваша_цель> PUBLIC OpenMP::OpenMP_CXX)
-    endif()
-else()
-    message(STATUS "OpenMP disabled")
-endif()
+target_include_directories(sequential PUBLIC include)
+target_include_directories(parallel PUBLIC include)
+
+find_package(OpenMP REQUIRED)
+target_link_libraries(parallel PUBLIC OpenMP::OpenMP_CXX)
