@@ -13,6 +13,8 @@ class matrix {
   std::size_t cols = 0;
 
  public:
+  matrix() = default;
+
   matrix(std::size_t rows, std::size_t cols, int val = {})
       : buffer(rows * cols, val), rows{rows}, cols{cols} {}
 

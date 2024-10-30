@@ -15,3 +15,13 @@ add_executable(
   src/algorithm.cpp
 )
 target_include_directories(matrix PUBLIC include)
+
+option(USE_OPENMP "Enable OpenMP support" OFF)
+if(USE_OPENMP)
+    find_package(OpenMP REQUIRED)
+    if(OpenMP_CXX_FOUND)
+        target_link_libraries(<ваша_цель> PUBLIC OpenMP::OpenMP_CXX)
+    endif()
+else()
+    message(STATUS "OpenMP disabled")
+endif()
