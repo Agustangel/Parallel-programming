@@ -1,6 +1,7 @@
 #pragma once
 
 #include <algorithm>
+#include <concepts>
 #include <iostream>
 #include <iterator>
 #include <numeric>
@@ -15,7 +16,7 @@ class matrix {
   matrix(std::size_t rows, std::size_t cols, int val = {})
       : buffer(rows * cols, val), rows{rows}, cols{cols} {}
 
-  template <typename Iter>
+  template <std::input_iterator Iter>
   matrix(std::size_t rows, std::size_t cols, Iter frst, Iter lst)
       : matrix{rows, cols} {
     std::size_t count = rows * cols;

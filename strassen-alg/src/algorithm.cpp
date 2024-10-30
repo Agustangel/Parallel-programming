@@ -1,8 +1,8 @@
 #include <algorithm>
+#include <cassert>
 #include <iostream>
+#include <bit>
 #include "matrix.hpp"
-
-// TODO: add concepts (requires)
 
 static void fillSubmatrix(matrix& dest, const matrix& src,
                           std::size_t row_offset, std::size_t col_offset) {
@@ -30,9 +30,11 @@ static void combineSubmatrix(matrix& dest, const matrix& src11,
   }
 }
 
-// Strassen's algorithm requires square matrices of the same size.
-// Strassen's algorithm requires the size of matrices of degree two.
 static matrix algorithmStrassen(const matrix& A, const matrix& B) {
+  assert(A.isSquare() && B.isSquare());
+  assert(A.nrows() == B.nrows());
+  assert(std::popcount(A.nrows()) == 1 && std::popcount(B.nrows()) == 1);
+
   std::size_t size = A.nrows();
   // Use the usual multiplication for a small matrix size.
   if (size <= 2)
