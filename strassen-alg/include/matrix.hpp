@@ -121,14 +121,13 @@ class matrix {
     matrix tmp{rhs};
     tmp.transpose();
 
-    std::transform(
-        res.begin(), res.end(), res.begin(), [this, &tmp, &res](int& elem) {
-          auto i = (&elem - &res.buffer[0]) / res.ncols();
-          auto j = (&elem - &res.buffer[0]) % res.ncols();
-          elem = std::inner_product((*this)[i].begin(), (*this)[i].end(),
-                                    tmp[j].begin(), 0);
-          return elem;
-        });
+    std::transform(res.begin(), res.end(), res.begin(), [&](int& elem) {
+      auto i = (&elem - &res.buffer[0]) / res.ncols();
+      auto j = (&elem - &res.buffer[0]) % res.ncols();
+      elem = std::inner_product((*this)[i].begin(), (*this)[i].end(),
+                                tmp[j].begin(), 0);
+      return elem;
+    });
 
     *this = std::move(res);
     return *this;
@@ -136,18 +135,20 @@ class matrix {
 
   matrix& transpose() & {
     if (isSquare()) {
-      for (std::size_t i = 0; i < rows; ++i) {
-        for (std::size_t j = i + 1; j < rows; ++j)
+      std::for_each(begin(), end(), [this](int& elem) {
+        auto i = (&elem - &buffer[0]) / cols;
+        auto j = (&elem - &buffer[0]) % cols;
+        if (i < j)
           std::swap((*this)[i][j], (*this)[j][i]);
-      }
+      });
       return *this;
     }
-
     matrix transposed{cols, rows};
-    for (std::size_t i = 0; i < rows; ++i) {
-      for (std::size_t j = 0; j < cols; ++j)
-        transposed[j][i] = std::move((*this)[i][j]);
-    }
+    std::for_each(begin(), end(), [&](int& elem) {
+      auto i = (&elem - &buffer[0]) / cols;
+      auto j = (&elem - &buffer[0]) % cols;
+      transposed[j][i] = std::move(elem);
+    });
     *this = std::move(transposed);
     return *this;
   }
