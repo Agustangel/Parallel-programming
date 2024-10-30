@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <iostream>
 #include <iterator>
+#include <numeric>
 #include <vector>
 
 class matrix {
@@ -119,12 +120,16 @@ class matrix {
     matrix res{rows, rhs.cols};
     matrix tmp{rhs};
     tmp.transpose();
-    for (std::size_t i = 0; i < rows; ++i) {
-      for (std::size_t j = 0; j < tmp.rows; ++j) {
-        for (std::size_t k = 0; k < cols; ++k)
-          res[i][j] += (*this)[i][k] * tmp[j][k];
-      }
-    }
+
+    std::transform(
+        res.begin(), res.end(), res.begin(), [this, &tmp, &res](int& elem) {
+          auto i = (&elem - &res.buffer[0]) / res.ncols();
+          auto j = (&elem - &res.buffer[0]) % res.ncols();
+          elem = std::inner_product((*this)[i].begin(), (*this)[i].end(),
+                                    tmp[j].begin(), 0);
+          return elem;
+        });
+
     *this = std::move(res);
     return *this;
   }
