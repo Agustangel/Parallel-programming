@@ -57,13 +57,30 @@ static matrix algorithmStrassen(const matrix& A, const matrix& B) {
   fillSubmatrix(B22, B, n, n);
 
   // Recursive part of the algorithm.
-  matrix P1 = algorithmStrassen(A11 + A22, B11 + B22);
-  matrix P2 = algorithmStrassen(A21 + A22, B11);
-  matrix P3 = algorithmStrassen(A11, B12 - B22);
-  matrix P4 = algorithmStrassen(A22, B21 - B11);
-  matrix P5 = algorithmStrassen(A11 + A12, B22);
-  matrix P6 = algorithmStrassen(A21 - A11, B11 + B12);
-  matrix P7 = algorithmStrassen(A12 - A22, B21 + B22);
+  matrix P1{}, P2{}, P3{}, P4{}, P5{}, P6{}, P7{};
+
+  #pragma omp task shared(P1, P2, P3, P4, P5, P6, P7)
+    P1 = algorithmStrassen(A11 + A22, B11 + B22);
+
+  #pragma omp task shared(P1, P2, P3, P4, P5, P6, P7)
+    P2 = algorithmStrassen(A21 + A22, B11);
+  
+  #pragma omp task shared(P1, P2, P3, P4, P5, P6, P7)
+    P3 = algorithmStrassen(A11, B12 - B22);
+  
+  #pragma omp task shared(P1, P2, P3, P4, P5, P6, P7)
+    P4 = algorithmStrassen(A22, B21 - B11);
+
+  #pragma omp task shared(P1, P2, P3, P4, P5, P6, P7)
+    P5 = algorithmStrassen(A11 + A12, B22);
+
+  #pragma omp task shared(P1, P2, P3, P4, P5, P6, P7)
+    P6 = algorithmStrassen(A21 - A11, B11 + B12);
+
+  #pragma omp task shared(P1, P2, P3, P4, P5, P6, P7)
+    P7 = algorithmStrassen(A12 - A22, B21 + B22);
+
+  #pragma omp taskwait
 
   // Calculating the result submatrices.
   matrix C11 = P1 + P4 - P5 + P7;
@@ -79,10 +96,15 @@ static matrix algorithmStrassen(const matrix& A, const matrix& B) {
 
 int main() {
   matrix A = matrix::square_unit(8);
+  matrix C {};
 
   auto start = std::chrono::high_resolution_clock::now();
-  matrix C = algorithmStrassen(A, A);
-  auto finish = std::chrono::high_resolution_clock::now();
+#pragma omp parallel shared(A) 
+{
+  #pragma omp single nowait 
+		C = algorithmStrassen(A, A);
+}
+  auto  finish = std::chrono::high_resolution_clock::now();
 
   auto elapsed = std::chrono::duration<double, std::milli>(finish - start);
   std::cout << "Calculation took " << elapsed.count() << "ms to run"

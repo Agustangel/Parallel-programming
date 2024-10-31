@@ -10,12 +10,13 @@ enable_testing()
 
 add_definitions(-DDEBUG)
 
+
 add_executable(
-  sequential
+  parallel
   src/algorithm.cpp
 )
 add_executable(
-  parallel
+  sequential
   src/algorithm.cpp
 )
 
