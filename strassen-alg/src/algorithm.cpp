@@ -6,6 +6,12 @@
 #include <omp.h>
 #include "matrix.hpp"
 
+#include <boost/lexical_cast.hpp>
+#include <boost/program_options.hpp>
+#include <boost/program_options/option.hpp>
+
+namespace po = boost::program_options;
+
 static void fillSubmatrix(matrix& dest, const matrix& src,
                           std::size_t row_offset, std::size_t col_offset) {
   auto dest_rows = dest.getProxyRows();
@@ -94,8 +100,24 @@ static matrix algorithmStrassen(const matrix& A, const matrix& B) {
   return C;
 }
 
-int main() {
-  matrix A = matrix::square_unit(8);
+int main(int argc, char** argv) {
+  std::size_t size = 8;
+
+  po::options_description desc("Allowed options");
+  desc.add_options()("help", "produce help message")(
+      "size", po::value<std::size_t>(&size),
+      "Size of the square matrix must be a power of two");
+
+  po::variables_map vm;
+  po::store(po::parse_command_line(argc, argv, desc), vm);
+  po::notify(vm);
+
+  if (vm.count("help")) {
+    std::cout << desc << "\n";
+    return 1;
+  }
+
+  matrix A = matrix::square_unit(size);
   matrix C {};
 
   auto start = std::chrono::high_resolution_clock::now();
@@ -109,8 +131,6 @@ int main() {
   auto elapsed = std::chrono::duration<double, std::milli>(finish - start);
   std::cout << "Calculation took " << elapsed.count() << "ms to run"
             << std::endl;
-
-  C.dump(std::cout);
 
   return 0;
 }

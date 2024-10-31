@@ -25,3 +25,9 @@ target_include_directories(parallel PUBLIC include)
 
 find_package(OpenMP REQUIRED)
 target_link_libraries(parallel PUBLIC OpenMP::OpenMP_CXX)
+
+FIND_PACKAGE(Boost COMPONENTS program_options REQUIRED)
+target_include_directories(sequential PUBLIC ${Boost_INCLUDE_DIRS})
+target_include_directories(parallel PUBLIC ${Boost_INCLUDE_DIRS})
+target_link_libraries(sequential PUBLIC ${Boost_LIBRARIES})
+target_link_libraries(parallel PUBLIC ${Boost_LIBRARIES})
