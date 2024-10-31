@@ -10,6 +10,9 @@ enable_testing()
 
 add_definitions(-DDEBUG)
 
+# Установка флага оптимизации
+set(CMAKE_CXX_FLAGS_RELEASE "-O2")
+set(CMAKE_BUILD_TYPE Release)
 
 add_executable(
   parallel
