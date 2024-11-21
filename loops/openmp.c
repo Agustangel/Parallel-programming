@@ -57,14 +57,20 @@ int main(int argc, char **argv)
     double** a = get_array(i_size, j_size);
     
     FILE *ff;
-    double start = omp_get_wtime();
 
-    #pragma omp parallel for collapse(2)
-    for (unsigned i = 0; i < i_size; i++){
-        for (unsigned j = 0; j < j_size; j++){
-            a[i][j] = sin(2*a[i][j]);
+    double start = omp_get_wtime();
+    #pragma omp parallel
+    {
+        #pragma omp for schedule(static) collapse(2)
+        for (unsigned i = 0; i < i_size; i++){
+            for (unsigned j = 0; j < j_size; j++){
+                a[i][j] = sin(2 * a[i][j]);
+            }
         }
     }
+    double end = omp_get_wtime();
+    double elapsed_time = end - start;
+    printf("Время выполнения: %.6f секунд\n", elapsed_time);
 
     ff = fopen("result.txt","w");
     for(unsigned i = 0; i < i_size; i++){
@@ -74,10 +80,6 @@ int main(int argc, char **argv)
         fprintf(ff,"\n");
     }
     fclose(ff);
-
-    double end = omp_get_wtime();
-    double elapsed_time = end - start;
-    printf("Время выполнения: %.6f секунд\n", elapsed_time);
 
     free_array(a, i_size);
 
