@@ -4,8 +4,8 @@
 #include <omp.h>
 
 
-void write_file(FILE *ff, double** a, unsigned i_size, unsigned j_size) {
-    ff = fopen("result.txt","w");
+void write_file(double** a, unsigned i_size, unsigned j_size) {
+    FILE *ff = fopen("result.txt","w");
     for(unsigned i = 0; i < i_size; i++){
         for (unsigned j = 0; j < j_size; j++){
             fprintf(ff,"%f ",a[i][j]);
@@ -66,8 +66,6 @@ int main(int argc, char **argv)
     }
 
     double** a = get_array(i_size, j_size);
-    
-    FILE *ff;
 
     double start = omp_get_wtime();
     #pragma omp parallel
@@ -83,7 +81,7 @@ int main(int argc, char **argv)
     double elapsed_time = end - start;
     printf("Время выполнения: %.6f секунд\n", elapsed_time);
 
-    write_file(ff, a, i_size, j_size);
+    write_file(a, i_size, j_size);
 
     free_array(a, i_size);
 
