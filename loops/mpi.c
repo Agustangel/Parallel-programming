@@ -4,8 +4,8 @@
 #include <mpi.h>
 
 
-void write_file(FILE* ff, double* a, unsigned i_size, unsigned j_size) {
-    ff = fopen("result.txt", "w");
+void write_file(double* a, unsigned i_size, unsigned j_size) {
+    FILE *ff = fopen("result.txt", "w");
     for (unsigned i = 0; i < i_size; i++) {
         for (unsigned j = 0; j < j_size; j++) {
             fprintf(ff, "%f ", a[i * j_size + j]);
@@ -51,8 +51,6 @@ int main(int argc, char **argv)
         MPI_Finalize();
         exit(EXIT_FAILURE);        
     }
-    
-    FILE *ff;
 
     // Определение диапазона строк для текущего процесса
     unsigned rows_per_proc = i_size / size;
