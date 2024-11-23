@@ -58,9 +58,30 @@ int main(int argc, char **argv)
     unsigned start_row = rank * rows_per_proc + (rank < extra_rows ? rank : extra_rows);
     unsigned end_row = start_row + rows_per_proc + (rank < extra_rows ? 1 : 0);
 
+    double *a = NULL, *local_array = NULL;
+    int *send_counts = NULL, *displs = NULL;
+    if (rank == 0) {
+        a = get_array(i_size, j_size);
+        // Определяем размеры и смещения для Scatterv
+        send_counts = (int*)malloc(size * sizeof(int));
+        displs = (int*)malloc(size * sizeof(int));
+        int offset = 0;
+        for (int i = 0; i < size; i++) {
+            send_counts[i] = (rows_per_proc + (i < extra_rows ? 1 : 0)) * j_size;
+            displs[i] = offset;
+            offset += send_counts[i];
+        }
+    }
+
     // Локальный массив строк
     unsigned local_rows = end_row - start_row;
-    double* local_array = get_array(local_rows, j_size);
+    local_array = (double*)malloc(local_rows * j_size * sizeof(double));
+
+    // Распределяем строки двумерного массива a по процессам
+    MPI_Scatterv(
+        a, send_counts, displs, MPI_DOUBLE, local_array,
+        local_rows * j_size, MPI_DOUBLE, 0, MPI_COMM_WORLD
+    );
 
     double start = MPI_Wtime();
     for (unsigned i = 0; i < local_rows; i++) {
@@ -69,17 +90,10 @@ int main(int argc, char **argv)
         }
     }
 
-    // Сбор результатов в процессе 0
-    double* global_array = NULL;
-    if (rank == 0) {
-        global_array = get_array(i_size, j_size);
-    }
-
-    MPI_Barrier(MPI_COMM_WORLD);
+    // Собираем результат обратно на процессе 0
     MPI_Gather(
-        local_array, local_rows * j_size, MPI_DOUBLE,
-        global_array, local_rows * j_size, MPI_DOUBLE,
-        0, MPI_COMM_WORLD
+        local_array, local_rows * j_size, MPI_DOUBLE, a,
+        local_rows * j_size, MPI_DOUBLE, 0, MPI_COMM_WORLD
     );
     MPI_Barrier(MPI_COMM_WORLD);
 
@@ -87,8 +101,10 @@ int main(int argc, char **argv)
     if (rank == 0) {
         double elapsed_time = end - start;
         printf("Время выполнения: %.6f секунд\n", elapsed_time);
-        write_file(ff, global_array, i_size, j_size);
-        free(global_array);
+        write_file(a, i_size, j_size);
+        free(a);
+        free(send_counts);
+        free(displs);
     }
 
     free(local_array);
