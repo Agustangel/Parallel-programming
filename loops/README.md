@@ -23,6 +23,22 @@
 ---
 
 ## Построение графиков и анализ
+Информация о процессоре, на котором проводились измерения:
+```
+Architecture:                    x86_64
+CPU op-mode(s):                  32-bit, 64-bit
+Byte Order:                      Little Endian
+Address sizes:                   39 bits physical, 48 bits virtual
+CPU(s):                          16
+Thread(s) per core:              2
+Core(s) per socket:              8
+Model name:                      11th Gen Intel(R) Core(TM) i7-11800H @ 2.30GHz
+simple synth:                    Intel Core (Tiger Lake) [Willow Cove], 10nm
+L1d cache:                       384 KiB
+L1i cache:                       256 KiB
+L2 cache:                        10 MiB
+L3 cache:                        24 MiB
+```
 
 - Построены графики ускорения (speedup) для циклов без зависимости по данным с использованием OpenMP и OpenMPI.
 
