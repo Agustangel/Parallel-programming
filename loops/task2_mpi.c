@@ -32,6 +32,7 @@ double* get_array(unsigned rows, unsigned cols) {
 int main(int argc, char **argv)
 {
     MPI_Init(&argc, &argv);
+    MPI_Status status;
 
     int rank, size;
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -48,64 +49,72 @@ int main(int argc, char **argv)
         exit(EXIT_FAILURE);        
     }
 
+    double* a = get_array(i_size, j_size);
+
     // Определение диапазона столбцов для текущего процесса
     int cols_per_proc = j_size / size;
     int extra_cols = j_size % size;
     int start_col = rank * cols_per_proc + (rank < extra_cols ? rank : extra_cols);
     int end_col = start_col + cols_per_proc + (rank < extra_cols ? 1 : 0);
+    int local_cols = end_col - start_col;
 
-    double *a = NULL, *local_array = NULL;
-    int *send_counts = NULL, *displs = NULL;
+    int *recv_counts = NULL, *displs = NULL;
+    double *gathered_a = NULL;
     if (rank == 0) {
-        a = get_array(i_size, j_size);
-        // Определяем размеры и смещения для Scatterv
-        send_counts = (int*)malloc(size * sizeof(int));
-        displs = (int*)malloc(size * sizeof(int));
+        recv_counts = malloc(size * sizeof(int));
+        displs = malloc(size * sizeof(int));
+        gathered_a = malloc(i_size * j_size * sizeof(double));
         int offset = 0;
         for (int i = 0; i < size; i++) {
-            send_counts[i] = (cols_per_proc + (i < extra_cols ? 1 : 0)) * i_size;
+            recv_counts[i] = local_cols * i_size;
             displs[i] = offset;
-            offset += send_counts[i];
+            offset += recv_counts[i];
         }
     }
-
-    // Локальный массив столбцов
-    unsigned local_cols = end_col - start_col;
-    local_array = (double*)malloc(i_size * local_cols * sizeof(double));
-
-    // Распределяем столбцы двумерного массива a по процессам
-    MPI_Scatterv(
-        a, send_counts, displs, MPI_DOUBLE, local_array,
-        i_size * local_cols, MPI_DOUBLE, 0, MPI_COMM_WORLD
-    );
 
     double start = MPI_Wtime();
     for (unsigned i = 3; i < i_size; i++) {
-        for (unsigned j = 0; j < local_cols; j++) {
-            local_array[i * j_size + j] = sin(3 * local_array[(i - 3) * j_size + (j + 2)]);
+        for (unsigned j = start_col; j < end_col; j++) {
+            a[i * j_size + j] = sin(3 * a[(i - 3) * j_size + (j + 2)]);
         }
         // Обмен на границе
+        // 3 -> 2 | 1 -> 0
+        // 2 -> 1 |
+        if (rank % 2 == 0)
+        {
+            if (rank != size - 1)
+                MPI_Recv(&a[i * j_size + end_col], 2, MPI_DOUBLE, rank + 1, 0, MPI_COMM_WORLD, &status);
+            if (rank != 0)
+                MPI_Send(&a[i * j_size + start_col], 2, MPI_DOUBLE, rank - 1, 0, MPI_COMM_WORLD);
+        } else {
+            MPI_Send(&a[i * j_size + start_col], 2, MPI_DOUBLE, rank - 1, 0, MPI_COMM_WORLD);
+            if (rank != size - 1)
+                MPI_Recv(&a[i * j_size + end_col], 2, MPI_DOUBLE, rank + 1, 0, MPI_COMM_WORLD, &status);
+        }
+    }
+    MPI_Barrier(MPI_COMM_WORLD);
 
+    // Локальный массив отправляем
+    double* sendbuf = malloc(local_cols * i_size * sizeof(double));
+    for (unsigned i = 0; i < i_size; i++) {
+        memcpy(&sendbuf[i * local_cols], &a[i * j_size + start_col], local_cols * sizeof(double));
     }
 
-    // Собираем результат обратно на процессе 0
-    MPI_Gatherv(
-        local_array, i_size * local_cols, MPI_DOUBLE, a,
-        send_counts, displs, MPI_DOUBLE, 0, MPI_COMM_WORLD
-    );
-    MPI_Barrier(MPI_COMM_WORLD);
+    MPI_Gatherv(sendbuf, local_cols * i_size, MPI_DOUBLE, gathered_a,
+                recv_counts, displs, MPI_DOUBLE, 0, MPI_COMM_WORLD);
 
     double end = MPI_Wtime();
     if (rank == 0) {
         double elapsed_time = end - start;
         printf("Время выполнения: %.6f секунд\n", elapsed_time);
-        write_file(a, i_size, j_size);
-        free(a);
-        free(send_counts);
+        write_file(gathered_a, i_size, j_size);
+        free(gathered_a);
+        free(recv_counts);
         free(displs);
     }
 
-    free(local_array);
+    free(sendbuf);
+    free(a);
     MPI_Finalize();
 
     return 0;
