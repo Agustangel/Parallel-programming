@@ -88,8 +88,8 @@ int main(int argc, char** argv) {
   }
 
   // Собираем результат обратно на процессе 0
-  MPI_Gather(local_array, local_rows * j_size, MPI_DOUBLE, a,
-             local_rows * j_size, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+  MPI_Gatherv(local_array, local_rows * j_size, MPI_DOUBLE, a, send_counts,
+              displs, MPI_DOUBLE, 0, MPI_COMM_WORLD);
   MPI_Barrier(MPI_COMM_WORLD);
 
   double end = MPI_Wtime();
